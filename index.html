@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>雲林福利有線地圖</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css">
+  <style>
+    body { margin: 0; }
+    #map { height: 100vh; }
+  </style>
+</head>
+<body>
+  <div id="map"></div>
+
+  <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+  <script>
+    const map = L.map('map').setView([23.709, 120.543], 9);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: '&copy; OpenStreetMap contributors'
+    }).addTo(map);
+
+    const sheetUrl = 'https://script.google.com/macros/s/AKfycbzPrDWMxp-El8NkuCQZkWBNfhU6QOw39QuLIY5MTRSJjMuppRM2_8Xv4Drmd6mqEhIeAQ/exec';
+
+    fetch(sheetUrl)
+      .then(res => res.json())
+      .then(data => {
+        data.forEach(row => {
+          const { 名稱, 地址, 緯度, 經度, 電話, 服務說明 } = row;
+          if (緯度 && 經度) {
+            const marker = L.marker([parseFloat(緯度), parseFloat(經度)])
+              .bindPopup(
+                `<b>${名稱}</b><br>
+                地址：${地址}<br>
+                電話：${電話 || '無'}<br>
+                服務：${服務說明 || ''}`
+              )
+              .addTo(map);
+          }
+        });
+      });
+  </script>
+</body>
+</html>
