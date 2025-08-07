@@ -10,9 +10,21 @@
   <style>
     body { margin: 0; }
     #map { height: 100vh; }
+    #loading {
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      background: rgba(255, 255, 255, 0.9);
+      padding: 10px;
+      text-align: center;
+      font-weight: bold;
+      z-index: 9999;
+    }
   </style>
 </head>
 <body>
+  <div id="loading">資料載入中，請稍候...</div>
   <div id="map"></div>
 
   <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
@@ -25,7 +37,6 @@
 
     const sheetUrl = 'https://script.google.com/macros/s/AKfycbzPrDWMxp-El8NkuCQZkWBNfhU6QOw39QuLIY5MTRSJjMuppRM2_8Xv4Drmd6mqEhIeAQ/exec';
 
-    // 建立群聚圖層
     const markerClusterGroup = L.markerClusterGroup();
 
     fetch(sheetUrl)
@@ -45,6 +56,11 @@
           }
         });
         map.addLayer(markerClusterGroup);
+        document.getElementById('loading').style.display = 'none';
+      })
+      .catch(error => {
+        document.getElementById('loading').innerText = '載入失敗，請稍後再試';
+        console.error('載入失敗：', error);
       });
   </script>
 </body>
