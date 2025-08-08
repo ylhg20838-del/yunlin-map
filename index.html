@@ -31,12 +31,10 @@
   <script src="https://unpkg.com/leaflet.markercluster/dist/leaflet.markercluster.js"></script>
   <script>
     const map = L.map('map').setView([23.709, 120.543], 9);
-    L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
-      attribution: '&copy; CartoDB & OpenStreetMap contributors',
-      subdomains: 'abcd',
-      maxZoom: 19
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: '&copy; OpenStreetMap contributors'
     }).addTo(map);
-
+    
     const sheetUrl = 'https://script.google.com/macros/s/AKfycbzPrDWMxp-El8NkuCQZkWBNfhU6QOw39QuLIY5MTRSJjMuppRM2_8Xv4Drmd6mqEhIeAQ/exec';
 
     const markerClusterGroup = L.markerClusterGroup();
