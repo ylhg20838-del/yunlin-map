@@ -2,11 +2,14 @@
 <html>
 <head>
   <meta charset="utf-8">
-  <title>中華郵政全國營業據點</title>
+  <title>雲林福利有線地圖</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css">
   <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster/dist/MarkerCluster.css">
   <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster/dist/MarkerCluster.Default.css">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.css">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.css">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet-search/dist/leaflet-search.min.css">
   <style>
     body { margin: 0; }
     #map { height: 100vh; }
@@ -29,15 +32,18 @@
 
   <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
   <script src="https://unpkg.com/leaflet.markercluster/dist/leaflet.markercluster.js"></script>
+  <script src="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.js"></script>
+  <script src="https://unpkg.com/leaflet-search/dist/leaflet-search.min.js"></script>
+
   <script>
     const map = L.map('map').setView([23.709, 120.543], 9);
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
       attribution: '&copy; OpenStreetMap contributors'
     }).addTo(map);
-    
-    const sheetUrl = 'https://script.google.com/macros/s/AKfycbzPrDWMxp-El8NkuCQZkWBNfhU6QOw39QuLIY5MTRSJjMuppRM2_8Xv4Drmd6mqEhIeAQ/exec';
 
+    const sheetUrl = 'https://script.google.com/macros/s/AKfycbzPrDWMxp-El8NkuCQZkWBNfhU6QOw39QuLIY5MTRSJjMuppRM2_8Xv4Drmd6mqEhIeAQ/exec';
     const markerClusterGroup = L.markerClusterGroup();
+    const markers = [];
 
     fetch(sheetUrl)
       .then(res => res.json())
@@ -45,23 +51,66 @@
         data.forEach(row => {
           const { 名稱, 地址, 緯度, 經度, 電話, 服務說明 } = row;
           if (緯度 && 經度) {
-            const marker = L.marker([parseFloat(緯度), parseFloat(經度)])
+            const marker = L.marker([parseFloat(緯度), parseFloat(經度)], { title: 名稱 })
               .bindPopup(
                 `<b>${名稱}</b><br>
                 地址：${地址}<br>
                 電話：${電話 || '無'}<br>
                 服務：${服務說明 || ''}`
               );
+            markers.push(marker);
             markerClusterGroup.addLayer(marker);
           }
         });
         map.addLayer(markerClusterGroup);
         document.getElementById('loading').style.display = 'none';
+
+        // 搜尋功能整合
+        const searchControl = new L.Control.Search({
+          layer: markerClusterGroup,
+          propertyName: 'title',
+          zoom: 16,
+          initial: false,
+          marker: false
+        });
+        map.addControl(searchControl);
       })
       .catch(error => {
         document.getElementById('loading').innerText = '載入失敗，請稍後再試';
         console.error('載入失敗：', error);
       });
+
+    // 定位按鈕功能
+    function addLocationControl() {
+      const locateBtn = L.control({ position: 'topleft' });
+      locateBtn.onAdd = function(map) {
+        const div = L.DomUtil.create('div', 'leaflet-bar leaflet-control leaflet-control-custom');
+        div.style.backgroundColor = 'white';
+        div.style.width = '30px';
+        div.style.height = '30px';
+        div.style.cursor = 'pointer';
+        div.style.display = 'flex';
+        div.style.alignItems = 'center';
+        div.style.justifyContent = 'center';
+        div.innerHTML = '📍';
+        div.title = '定位我目前位置';
+        div.onclick = function() {
+          map.locate({ setView: true, maxZoom: 16 });
+        };
+        return div;
+      };
+      locateBtn.addTo(map);
+
+      map.on('locationfound', function(e) {
+        L.circle(e.latlng, { radius: e.accuracy, color: 'blue', fillColor: '#30f', fillOpacity: 0.3 }).addTo(map);
+      });
+
+      map.on('locationerror', function() {
+        alert('無法取得您的位置，請確認瀏覽器已允許位置存取。');
+      });
+    }
+
+    addLocationControl();
   </script>
 </body>
 </html>
